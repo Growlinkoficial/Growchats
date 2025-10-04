@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversa IA Arquivador</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #000000 0%, #1a0a2e 25%, #0f0620 50%, #1a0033 75%, #1a0000 100%);
+            background-attachment: fixed;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 0, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 0, 139, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(75, 0, 130, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(15, 15, 30, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 { 
+            color: #ffffff;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0ff 50%, #ffc0cb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        p { 
+            color: #b8b8d0;
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        input[type="url"] { 
+            width: 100%;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 40, 0.6);
+            color: #ffffff;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="url"]::placeholder {
+            color: #7a7a95;
+        }
+
+        input[type="url"]:focus { 
+            border-color: rgba(100, 100, 255, 0.5);
+            background: rgba(25, 25, 50, 0.8);
+            box-shadow: 
+                0 0 0 3px rgba(100, 100, 255, 0.1),
+                0 10px 20px -5px rgba(100, 100, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button { 
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4169e1 0%, #8b008b 50%, #dc143c 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(65, 105, 225, 0.3);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        button:hover:not(:disabled) { 
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -5px rgba(65, 105, 225, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled { 
+            background: linear-gradient(135deg, #4a4a5a 0%, #3a3a4a 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .status-message { 
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading { 
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.15) 100%);
+            color: #ffd54f;
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+
+        .success { 
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(46, 125, 50, 0.15) 100%);
+            color: #81c784;
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .error { 
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(211, 47, 47, 0.15) 100%);
+            color: #ef5350;
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Growchats</h1>
+        <p>Cole o link de compartilhamento de plataformas como ChatGPT (vias links) para baixar o arquivo Markdown.</p>
+        
+        <input type="url" id="chatUrl" placeholder="Cole o link da conversa aqui..." required>
+        <button id="downloadButton">BAIXAR ARQUIVO (.md)</button>
+        
+        <div id="status" class="status-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('downloadButton').addEventListener('click', async () => {
+            const urlInput = document.getElementById('chatUrl');
+            const statusDiv = document.getElementById('status');
+            const downloadButton = document.getElementById('downloadButton');
+            const chatUrl = urlInput.value.trim();
+
+            if (!chatUrl) {
+                statusDiv.innerText = "Por favor, insira um link válido.";
+                statusDiv.className = 'status-message error';
+                statusDiv.style.display = 'block';
+                return;
+            }
+
+            // 1. Mostrar estado de carregamento
+            statusDiv.innerText = "Conectando e extraindo... (Aguarde, o tempo depende do carregamento do site de origem)";
+            statusDiv.className = 'status-message loading';
+            statusDiv.style.display = 'block';
+            downloadButton.disabled = true;
+
+            try {
+                // 2. Enviar a requisição para o backend
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: chatUrl })
+                });
+
+                // 3. Processar a resposta
+                if (response.ok) {
+                    const blob = await response.blob();
+                    
+                    let filename = 'conversa_arquivada.md';
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        const matches = filenameRegex.exec(disposition);
+                        if (matches != null && matches[1]) {
+                            filename = matches[1].replace(/['"]/g, '');
+                        }
+                    }
+                    
+                    // 4. Disparar o download
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    // 5. Sucesso
+                    statusDiv.innerText = "Sucesso! Download iniciado.";
+                    statusDiv.className = 'status-message success';
+                } else {
+                    // Erro: recebe a mensagem de erro do backend
+                    const errorText = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        statusDiv.innerText = `ERRO: ${errorData.error || 'Falha desconhecida.'}`;
+                    } catch (e) {
+                         statusDiv.innerText = `ERRO NO SERVIDOR: ${errorText.substring(0, 50)}...`;
+                    }
+                    statusDiv.className = 'status-message error';
+                }
+
+            } catch (error) {
+                console.error('Erro de rede:', error);
+                statusDiv.innerText = `ERRO DE CONEXÃO: Tente novamente.`;
+                statusDiv.className = 'status-message error';
+            } finally {
+                downloadButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

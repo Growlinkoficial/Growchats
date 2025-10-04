@@ -1,0 +1,9 @@
+# Ambientes Virtuais (CRUCIAL!)
+venv/
+.venv/
+# Arquivos de cache e compilados
+__pycache__/
+*.pyc
+# Configurações do IDE/SO (Opcional, mas recomendado)
+.vscode/
+.DS_Store
