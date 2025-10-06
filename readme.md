@@ -26,6 +26,7 @@ O projeto evoluiu para uma arquitetura assíncrona para proporcionar uma experi�
 
 ### Estrutura do Projeto
 
+```
 /growchats
 ├── app.py                  # Servidor Flask (gerencia tarefas e status)
 ├── tasks.py                # Define a tarefa Celery que executa a extração
@@ -34,7 +35,7 @@ O projeto evoluiu para uma arquitetura assíncrona para proporcionar uma experi�
 │   └── index.html          # Interface do Usuário (HTML/JS/CSS)
 ├── requirements.txt        # Lista de dependências do projeto
 └── venv/                   # Ambiente Virtual
-
+```
 -----
 
 ### Requisitos de Instalação e Execução
