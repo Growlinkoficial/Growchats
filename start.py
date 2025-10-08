@@ -163,7 +163,7 @@ def main():
         print_colored("✅ Growchats está rodando COMPLETO!", Colors.OKGREEN)
         print_colored("=" * 50, Colors.OKGREEN)
         print_colored("\n🌐 Acesse: http://127.0.0.1:5000", Colors.BOLD)
-        print_colored("\n💡 Pressione Ctrl+C para parar TUDO (Redis incluído)\n", Colors.WARNING)
+        print_colored("\n💡 Pressione Ctrl+C para parar TUDO (Redis + Docker)\n", Colors.WARNING)
         
         # Monitora processos e exibe logs
         while True:
@@ -181,7 +181,7 @@ def main():
             time.sleep(0.1)
     
     except KeyboardInterrupt:
-        print_colored("\n\n🛑 Encerrando TUDO (Redis + Aplicação)...", Colors.WARNING)
+        print_colored("\n\n🛑 Encerrando TUDO (Redis + Docker + Aplicação)...", Colors.WARNING)
         
         # 1. Encerra aplicação
         for name, proc in processes:
@@ -192,10 +192,28 @@ def main():
             except subprocess.TimeoutExpired:
                 proc.kill()
         
-        # 2. Encerra Redis
-        stop_redis()
+        # 2. Para Redis
+        print_colored("🛑 Parando Redis...", Colors.OKBLUE)
+        try:
+            subprocess.run(["docker-compose", "down"], timeout=10)
+            print_colored("✅ Redis parado", Colors.OKGREEN)
+        except:
+            print_colored("⚠️  Erro ao parar Redis", Colors.WARNING)
         
-        print_colored("\n✅ Tudo encerrado (zero impacto no sistema)", Colors.OKGREEN)
+        # 3. Para Docker Desktop
+        print_colored("🐳 Encerrando Docker Desktop...", Colors.OKBLUE)
+        try:
+            subprocess.run(
+                ["powershell", "-Command", "Stop-Process -Name 'Docker Desktop' -Force -ErrorAction SilentlyContinue"],
+                timeout=5
+            )
+            time.sleep(1)
+            print_colored("✅ Docker Desktop encerrado", Colors.OKGREEN)
+        except:
+            print_colored("⚠️  Docker Desktop já estava fechado", Colors.WARNING)
+        
+        print_colored("\n✅ Tudo encerrado (Redis + Docker + Aplicação)", Colors.OKGREEN)
+        print_colored("💡 Sistema liberado, zero impacto na máquina!", Colors.OKCYAN)
         sys.exit(0)
 
 if __name__ == "__main__":
