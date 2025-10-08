@@ -21,7 +21,7 @@ O projeto evoluiu para uma arquitetura assíncrona para proporcionar uma experi�
 | **Formato de Saída** | **Markdown (.md)**. | **CONCLUÍDO** |
 | **Experiência do Usuário** | Feedback instantâneo com barra de progresso e cronômetro. | **CONCLUÍDO** |
 | **Estabilidade** | Timeouts do Playwright ajustados para 90s para garantir a conclusão de extrações longas. | **IMPLEMENTADO** |
-| **Otimização** | Consumo de RAM otimizado para máquinas com 4GB. | **IMPLEMENTADO** |
+| **Otimização** | Consumo de RAM otimizado para máquinas com desempenho reduzido. | **IMPLEMENTADO** |
 
 -----
 
@@ -155,7 +155,7 @@ python utils/monitor.py
 ```
 
 **Quando usar:**
-- Desenvolvimento em máquinas com pouca RAM (4GB)
+- Desenvolvimento em máquinas com pouca RAM
 - Identificar gargalos de performance
 - Debugar problemas de lentidão
 
@@ -242,7 +242,7 @@ Este projeto é de código aberto. Consulte o arquivo LICENSE para mais detalhes
 
 - ✅ Inicializador unificado (`start.py`)
 - ✅ Docker Compose para Redis
-- ✅ Otimizações de memória para máquinas com 4GB RAM
+- ✅ Otimizações de memória para máquinas com desempenho reduzido
 - ✅ Monitor de recursos em tempo real
 - ✅ Logs unificados e coloridos
 - ✅ Verificações automáticas de dependências
