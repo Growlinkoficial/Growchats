@@ -10,6 +10,12 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 celery_app = Celery('tasks', broker=REDIS_URL, backend=REDIS_URL)
 
+# ✨ NOVO: Otimizações para economizar RAM e melhorar performance
+celery_app.conf.update(
+    worker_prefetch_multiplier=1,      # Processa 1 tarefa por vez (evita sobrecarga)
+    worker_max_tasks_per_child=10,     # Reinicia worker após 10 tarefas (evita memory leak)
+)
+
 @celery_app.task
 def run_extraction_task(url: str):
     """

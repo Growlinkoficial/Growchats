@@ -1,7 +1,6 @@
-# extractor.py - Versão Corrigida
+# extractor.py - Versão Otimizada
 
 import sys
-# A linha abaixo foi corrigida para remover o espaço extra
 from playwright.sync_api import sync_playwright
 
 # --- CONFIGURAÇÕES DE EXTRAÇÃO ---
@@ -56,7 +55,19 @@ def extract_conversation(url: str):
                 '--disable-setuid-sandbox',
                 '--disable-gpu',
                 '--disable-dev-shm-usage',
-                '--blink-settings=imagesEnabled=false'
+                '--blink-settings=imagesEnabled=false',
+                # ✨ NOVAS FLAGS DE OTIMIZAÇÃO (economia de memória)
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-sync',
+                '--metrics-recording-only',
+                '--disable-default-apps',
+                '--mute-audio',
+                '--no-first-run',
+                '--disable-background-timer-throttling',
+                '--disable-renderer-backgrounding',
+                '--disable-backgrounding-occluded-windows',
+                '--single-process',  # ✨ CRÍTICO: Usa 1 processo só (essencial para 4GB RAM)
             ]
         ) 
         page = browser.new_page()
