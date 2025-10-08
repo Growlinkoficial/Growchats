@@ -1,9 +1,18 @@
 # Ambientes Virtuais (CRUCIAL!)
 venv/
 .venv/
+
 # Arquivos de cache e compilados
 __pycache__/
 *.pyc
+utils/__pycache__/
+
 # Configurações do IDE/SO (Opcional, mas recomendado)
 .vscode/
 .DS_Store
+
+# Docker volumes (dados do Redis)
+redis_data/
+
+# Arquivos de log (se houver)
+*.log
