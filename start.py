@@ -23,7 +23,7 @@ def print_colored(msg, color):
     print(f"{color}{msg}{Colors.ENDC}")
 
 def check_docker_running():
-    """Verifica se o Docker está rodando"""
+    """Verifica se o Docker está rodando e inicia automaticamente se necessário"""
     try:
         result = subprocess.run(
             ["docker", "info"],
@@ -32,6 +32,80 @@ def check_docker_running():
         )
         return result.returncode == 0
     except:
+        return False
+
+def start_docker_desktop():
+    """Inicia o Docker Desktop em segundo plano (multiplataforma)"""
+    print_colored("🐳 Docker não está rodando. Iniciando automaticamente...", Colors.WARNING)
+    
+    import platform
+    system = platform.system()
+    
+    try:
+        if system == "Windows":
+            # Tenta múltiplos paths comuns no Windows
+            docker_paths = [
+                "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe",
+                "C:\\Program Files (x86)\\Docker\\Docker\\Docker Desktop.exe",
+                os.path.expanduser("~\\AppData\\Local\\Docker\\Docker Desktop.exe"),
+            ]
+            
+            # Método 1: Tenta pelos paths conhecidos
+            docker_started = False
+            for docker_path in docker_paths:
+                if os.path.exists(docker_path):
+                    print_colored(f"   Encontrado em: {docker_path}", Colors.OKCYAN)
+                    subprocess.Popen(
+                        [docker_path],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                    docker_started = True
+                    break
+            
+            # Método 2: Se não encontrou, tenta via comando do sistema
+            if not docker_started:
+                print_colored("   Tentando iniciar via registro do Windows...", Colors.OKCYAN)
+                subprocess.Popen(
+                    ["powershell", "-Command", "Start-Process 'Docker Desktop'"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+        
+        elif system == "Darwin":  # macOS
+            # macOS: Inicia via comando open
+            subprocess.Popen(
+                ["open", "-a", "Docker"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        
+        elif system == "Linux":
+            # Linux: Tenta iniciar o serviço systemd
+            subprocess.Popen(
+                ["sudo", "systemctl", "start", "docker"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        
+        print_colored("⏳ Aguardando Docker inicializar (pode levar 30-60s)...", Colors.OKBLUE)
+        
+        # Aguarda até 90 segundos para o Docker ficar pronto
+        for i in range(90):
+            time.sleep(1)
+            if check_docker_running():
+                print_colored(f"✅ Docker iniciado com sucesso! ({i+1}s)", Colors.OKGREEN)
+                return True
+            
+            # Feedback visual a cada 10 segundos
+            if (i + 1) % 10 == 0:
+                print_colored(f"   Ainda aguardando... ({i+1}s)", Colors.OKCYAN)
+        
+        print_colored("❌ Timeout: Docker não iniciou em 90 segundos", Colors.FAIL)
+        return False
+        
+    except Exception as e:
+        print_colored(f"❌ Erro ao iniciar Docker: {e}", Colors.FAIL)
         return False
 
 def check_redis_container():
@@ -67,31 +141,6 @@ def start_redis():
         print_colored("Instale com: pip install docker-compose", Colors.WARNING)
         return False
 
-def stop_redis_and_docker():
-    """Para o Redis e o Docker Desktop"""
-    print_colored("🛑 Parando Redis...", Colors.OKBLUE)
-    try:
-        subprocess.run(
-            ["docker-compose", "down"],
-            timeout=10
-        )
-        print_colored("✅ Redis parado", Colors.OKGREEN)
-    except:
-        print_colored("⚠️  Erro ao parar Redis (pode já estar parado)", Colors.WARNING)
-    
-    # Para o Docker Desktop (Windows)
-    print_colored("🐳 Encerrando Docker Desktop...", Colors.OKBLUE)
-    try:
-        # Windows: Fecha o Docker Desktop
-        subprocess.run(
-            ["powershell", "-Command", "Stop-Process -Name 'Docker Desktop' -Force -ErrorAction SilentlyContinue"],
-            timeout=5
-        )
-        time.sleep(1)
-        print_colored("✅ Docker Desktop encerrado", Colors.OKGREEN)
-    except:
-        print_colored("⚠️  Docker Desktop já estava fechado ou erro ao fechar", Colors.WARNING)
-
 def check_venv():
     """Verifica se está rodando no venv"""
     return hasattr(sys, 'real_prefix') or (
@@ -112,11 +161,13 @@ def main():
     
     # Verificação 2: Docker
     if not check_docker_running():
-        print_colored("\n❌ Docker não está rodando!", Colors.FAIL)
-        print_colored("Inicie o Docker Desktop primeiro", Colors.FAIL)
-        sys.exit(1)
-    
-    print_colored("✅ Docker rodando", Colors.OKGREEN)
+        # Tenta iniciar o Docker automaticamente
+        if not start_docker_desktop():
+            print_colored("\n❌ Não foi possível iniciar o Docker!", Colors.FAIL)
+            print_colored("Inicie o Docker Desktop manualmente e tente novamente", Colors.FAIL)
+            sys.exit(1)
+    else:
+        print_colored("✅ Docker rodando", Colors.OKGREEN)
     
     # Iniciar Redis
     if not start_redis():
