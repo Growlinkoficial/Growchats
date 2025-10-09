@@ -1,6 +1,7 @@
-# extractor.py - Versão Otimizada
+# extractor.py - Versão Corrigida com Segurança Melhorada
 
 import sys
+from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 # --- CONFIGURAÇÕES DE EXTRAÇÃO ---
@@ -13,6 +14,32 @@ STABLE_WAIT_SELECTOR = '.flex.h-full.flex-col'
 NAV_TIMEOUT = 90000  # 90 segundos para navegação inicial
 STABLE_WAIT = 90000  # 90 segundos para a interface carregar
 MESSAGE_WAIT = 90000 # 90 segundos para as mensagens aparecerem
+
+# --- Função para validar URL ---
+def validate_url(url: str) -> tuple[bool, str]:
+    """
+    Valida se a URL é legítima e pertence à plataforma esperada.
+    Retorna (is_valid, error_message)
+    """
+    try:
+        parsed = urlparse(url)
+        
+        # Verificar se tem esquema (http/https)
+        if not parsed.scheme or parsed.scheme not in ['http', 'https']:
+            return False, "URL deve começar com http:// ou https://"
+        
+        # Verificar se o domínio corresponde exatamente
+        if parsed.netloc != TARGET_PLATFORM_URL and not parsed.netloc.endswith(f'.{TARGET_PLATFORM_URL}'):
+            return False, f"URL deve ser do domínio {TARGET_PLATFORM_URL}"
+        
+        # Verificar se tem path (não é apenas o domínio)
+        if not parsed.path or parsed.path == '/':
+            return False, "URL deve incluir o caminho da conversa"
+        
+        return True, ""
+        
+    except Exception as e:
+        return False, f"URL inválida: {str(e)}"
 
 # --- Função para bloquear requisições ---
 def block_unnecessary_requests(route):
@@ -32,6 +59,8 @@ def format_conversation_data(messages: list) -> str:
     for msg in messages:
         markdown_output += f"## {msg['emissor']}:\n"
         content = msg['conteudo'].strip()
+        # Sanitização básica - remover caracteres potencialmente perigosos
+        content = content.replace('\x00', '')  # Remove null bytes
         formatted_content = content.replace('\n', '\n> ')
         markdown_output += f"> {formatted_content}\n\n"
         
@@ -42,8 +71,10 @@ def extract_conversation(url: str):
     Navega, extrai todos os turnos e retorna o conteúdo formatado em Markdown.
     Retorna (markdown_string) ou (error_message, http_status_code).
     """
-    if TARGET_PLATFORM_URL not in url:
-        return f"Erro: O link não parece ser de um chat compartilhado do {TARGET_PLATFORM_NAME}.", 400
+    # Validar URL antes de processar
+    is_valid, error_msg = validate_url(url)
+    if not is_valid:
+        return f"Erro de validação: {error_msg}", 400
 
     print(f"[EXTRACTOR] Iniciando extração do link: {url}")
     
@@ -56,18 +87,7 @@ def extract_conversation(url: str):
                 '--disable-gpu',
                 '--disable-dev-shm-usage',
                 '--blink-settings=imagesEnabled=false',
-                # ✨ NOVAS FLAGS DE OTIMIZAÇÃO (economia de memória)
-                '--disable-extensions',
-                '--disable-background-networking',
-                '--disable-sync',
-                '--metrics-recording-only',
-                '--disable-default-apps',
-                '--mute-audio',
-                '--no-first-run',
-                '--disable-background-timer-throttling',
-                '--disable-renderer-backgrounding',
-                '--disable-backgrounding-occluded-windows',
-                '--single-process',  # ✨ CRÍTICO: Usa 1 processo só (essencial para 4GB RAM)
+                '--disable-web-security'  # Apenas para scraping
             ]
         ) 
         page = browser.new_page()
@@ -76,7 +96,7 @@ def extract_conversation(url: str):
             page.route("**/*", block_unnecessary_requests)
 
             print("[EXTRACTOR] Navegando...")
-            page.goto(url, timeout=NAV_TIMEOUT)
+            page.goto(url, timeout=NAV_TIMEOUT, wait_until='domcontentloaded')
 
             print("[EXTRACTOR] Aguardando carregamento estável...")
             page.wait_for_selector(STABLE_WAIT_SELECTOR, state="visible", timeout=STABLE_WAIT)
@@ -90,6 +110,11 @@ def extract_conversation(url: str):
             page.wait_for_selector(MESSAGE_CONTAINER_SELECTOR, state="visible", timeout=MESSAGE_WAIT)
 
             message_elements = page.locator(MESSAGE_CONTAINER_SELECTOR).all()
+            
+            if not message_elements:
+                browser.close()
+                return "Nenhuma mensagem encontrada na conversa.", 404
+            
             conversation_data = []
 
             for element in message_elements:
@@ -109,6 +134,10 @@ def extract_conversation(url: str):
                         "emissor": emissor,
                         "conteudo": message_text
                     })
+            
+            if not conversation_data:
+                browser.close()
+                return "Não foi possível extrair o conteúdo da conversa.", 500
             
             markdown_output = format_conversation_data(conversation_data)
             

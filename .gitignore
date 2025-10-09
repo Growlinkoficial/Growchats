@@ -1,6 +1,6 @@
 # Ambientes Virtuais (CRUCIAL!)
 venv/
-.venv/
+.env
 
 # Arquivos de cache e compilados
 __pycache__/
@@ -14,5 +14,21 @@ utils/__pycache__/
 # Docker volumes (dados do Redis)
 redis_data/
 
-# Arquivos de log (se houver)
+# Logs e dados temporários
 *.log
+*.pid
+celerybeat-schedule
+celerybeat.db
+dump.rdb
+
+# Bancos de dados
+*.db
+*.sqlite3
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.production
+
+# Arquivos de sessão
+flask_session/
